@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class Main {
 
     public static Map<String, Long> variableMap = new HashMap<>();
-    public static String regexOperatorDigit = "[-+ ]*[0-9]*";
+    public static String regexOperatorDigit = "[-+ ]*([0-9]|[a-zA-Z])+";
     public static Pattern pattern = Pattern.compile(regexOperatorDigit);
 
     public static void main(String[] args) {
@@ -37,14 +37,15 @@ public class Main {
                 continue;
             }
 
-            /* VARIABLE PRINTING TODO: might be useless due to normal calculator logic getting the var automatically*/
-            if (inputString.matches("[a-zA-Z]*") && variableMap.containsKey(inputString)){
-                System.out.println(variableMap.get(inputString));
-                continue;
-            }
+//            /* VARIABLE PRINTING TODO: might be useless due to normal calculator logic getting the var automatically*/
+//            if (inputString.matches("[a-zA-Z]*") && variableMap.containsKey(inputString)){
+//                System.out.println("varprtint");
+//                System.out.println(variableMap.get(inputString));
+//                continue;
+//            }
 
             /* CATCH ALL FOR INVALID INPUT */
-            if(!inputString.matches("([-+ ]*[0-9])*")){
+            if(!inputString.matches("[ +-]*(([0-9]+|[a-zA-Z]+)[ ]*[+-][ +-]*)*([0-9]+|[a-zA-Z]+)")){
                 System.out.println("Invalid expression: Catch All");
                 continue;
             }
@@ -57,15 +58,33 @@ public class Main {
                 continue;
             }
 
-            System.out.println("list of elements:" + list);
+            //System.out.println("list of elements:" + list);
 
             if(list.get(0).matches("[+-]")){
                 list.add(0, "0");
             }
-            int result = Integer.parseInt(list.get(0));
+
+            long result;
+            if(list.get(0).matches("[+-]*[a-zA-Z]+")){
+                result = getVariableNumValue(list.get(0));
+            } else if(list.get(0).matches("[+-]*[0-9]+")){
+                result = Integer.parseInt(list.get(0));
+            } else {
+                System.out.printf("Elements list returned unexpected value %s, aborting\n", list.get(0));
+                continue;
+            }
+
             for (int i = 1; i < list.size(); i = i+2) {
                 String operator = list.get(i);
-                int n = Integer.parseInt(list.get(i+1));
+                long n;
+                if(list.get(i+1).matches("[+-]*[a-zA-Z]+")){
+                    n = getVariableNumValue(list.get(i+1));
+                } else if(list.get(i+1).matches("[+-]*[0-9]+")){
+                    n = Integer.parseInt(list.get(i+1));
+                } else {
+                    System.out.printf("Elements list returned unexpected value %s, aborting\n", list.get(i+1));
+                    continue;
+                }
                 switch (operator) {
                     case "+":
                         result += n;
@@ -82,10 +101,33 @@ public class Main {
                 }
 
             }
-
-            System.out.println(result);
+            //TODO: Hacky way to not print invalid variable
+            if (result != Long.MIN_VALUE) {
+                System.out.println(result);
+            }
         }
         System.out.println("Bye!");
+    }
+
+    private static long getVariableNumValue(String s) {
+        char operator = '?';
+        if(String.valueOf(s.charAt(0)).matches("[-+]")) {
+            operator = s.charAt(0);
+            s = s.substring(1);
+        }
+
+        long output = Long.MIN_VALUE;
+        if(variableMap.containsKey(s)) {
+            output = variableMap.get(s);
+        } else {
+            System.out.printf("Unknown variable: %s not defined yet or cannot be found", s);
+            //TODO: Proper error handling, just returns min value of long as is, to tell that something is deeply wrong
+            return output;
+        }
+        if (operator == '-') {
+            return output * -1;
+        }
+        return output;
     }
 
     private static void saveVariable(String inputString) {
@@ -96,9 +138,17 @@ public class Main {
         String[] inputElements = inputString.split("=");
 
         if (varAssignmentHasMistake(inputElements)) return;
-
-        long number = Long.parseLong(condenseSigns(inputElements[1].trim()));
-        System.out.printf("we put %s as %d\n", inputElements[0].trim(), number);
+        inputElements[1] = condenseSigns(inputElements[1].trim());
+        long number;
+        if(inputElements[1].matches("[+-]*[a-zA-Z]+")){
+            number = getVariableNumValue(inputElements[1]);
+        } else if(inputElements[1].matches("[+-]*[0-9]+")){
+            number = Integer.parseInt(inputElements[1]);
+        } else {
+            System.out.printf("Assignment of var to unexpected value %s, aborting\n", inputElements[1]);
+            number = Long.MIN_VALUE;
+        }
+        //System.out.printf("we put %s as %d\n", inputElements[0].trim(), number);
         variableMap.put(inputElements[0].trim(), number);
     }
 
@@ -115,7 +165,7 @@ public class Main {
             System.out.println("Invalid identifier: You can only use latin letters as variable name!");
             return true;
         }
-        if (!inputElements[1].trim().matches("[-+ ]*[0-9]+")){ //TODO: remember fractions later!
+        if (!inputElements[1].trim().matches("[-+ ]*([0-9]+|[a-zA-Z]+)")){ //TODO: remember fractions later!
             System.out.println("Invalid assignment: Value has symbols other than numbers and + -");
             return true;
         }
@@ -157,7 +207,7 @@ public class Main {
 
     private static String condenseSigns(String input) {
         //while current substring is bigger than the digits of the substring and 1 sign
-        while (input.length() > input.replaceAll("\\D", "").length() + 1) {
+        while (input.length() > input.replaceAll("\\W", "").length() + 1) {
             input = input.replaceAll("\\+-|-\\+", "-")
                                     .replaceAll("\\++", "")
                                     .replaceAll("--", "+");
