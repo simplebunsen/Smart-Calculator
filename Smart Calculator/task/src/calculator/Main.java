@@ -120,7 +120,8 @@ public class Main {
         if(variableMap.containsKey(s)) {
             output = variableMap.get(s);
         } else {
-            System.out.printf("Unknown variable: %s not defined yet or cannot be found", s);
+            System.out.println("Unknown variable");
+            //System.out.printf("Unknown variable: %s not defined yet or cannot be found", s);
             //TODO: Proper error handling, just returns min value of long as is, to tell that something is deeply wrong
             return output;
         }
@@ -154,19 +155,23 @@ public class Main {
 
     private static boolean varAssignmentHasMistake(String[] inputElements) {
         if (inputElements.length < 2) {
-            System.out.println("Invalid assignment: one side doesn't have input!");
+            System.out.println("Invalid assignment");
+            //System.out.println("Invalid assignment: one side doesn't have input!");
             return true;
         }
         if (inputElements.length > 2) {
-            System.out.println("Invalid assignment: more than 1 equals sign!");
+            System.out.println("Invalid assignment");
+            //System.out.println("Invalid assignment: more than 1 equals sign!");
             return true;
         }
         if (!inputElements[0].trim().matches("[a-zA-Z]+")){
-            System.out.println("Invalid identifier: You can only use latin letters as variable name!");
+            System.out.println("Invalid identifier");
+            //System.out.println("Invalid identifier: You can only use latin letters as variable name!");
             return true;
         }
         if (!inputElements[1].trim().matches("[-+ ]*([0-9]+|[a-zA-Z]+)")){ //TODO: remember fractions later!
-            System.out.println("Invalid assignment: Value has symbols other than numbers and + -");
+            System.out.println("Invalid assignment");
+            //System.out.println("Invalid assignment: Value has symbols other than numbers and + -");
             return true;
         }
         return false;
