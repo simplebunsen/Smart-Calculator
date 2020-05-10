@@ -12,6 +12,48 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        while (true) {
+            NotationConverter nc = new NotationConverter(scanner.nextLine());
+            String[] postfixExpression = nc.convert().split(" ");
+            Deque<Long> calcStack = new ArrayDeque<>();
+
+            for (String element : postfixExpression) {
+                if (element.matches("-?[0-9]+"))
+                    calcStack.push(Long.parseLong(element));
+                else if (element.matches("-?[a-zA-Z]"))
+                    calcStack.push(getVariableNumValue(element));
+                else if (element.matches("[-+*/^]")) {
+                    long num1 = calcStack.pop();
+                    long num2 = calcStack.pop();
+                    calcStack.push(calculate(element, num1, num2));
+                }
+            }
+            System.out.println(calcStack.pop());
+        }
+
+    }
+
+    private static long calculate(String operator, long num1, long num2) {
+        switch (operator) {
+            case "+":
+                return num1 + num2;
+            case "-":
+                return num1 - num2;
+            case "*":
+                return num1 * num2;
+            case "/":
+                return num1 / num2;
+            case "^":
+                return (long) Math.pow(num1, num2);
+            default:
+                System.out.println("something wrong in calculate");
+                return Long.MIN_VALUE;
+
+        }
+    }
+
+    public static void temp () {
+        Scanner scanner = new Scanner(System.in);
 
         while(true){
             String inputString = scanner.nextLine();
@@ -125,6 +167,7 @@ public class Main {
             //TODO: Proper error handling, just returns min value of long as is, to tell that something is deeply wrong
             return output;
         }
+
         if (operator == '-') {
             return output * -1;
         }
