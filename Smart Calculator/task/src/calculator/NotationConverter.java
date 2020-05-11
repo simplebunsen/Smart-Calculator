@@ -88,6 +88,7 @@ public class NotationConverter {
             }
             result.append(" ").append(stack.pop());
         }
+        //System.out.println("returning: " + result);
         return result.toString();
     }
 

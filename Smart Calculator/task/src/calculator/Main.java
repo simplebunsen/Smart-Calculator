@@ -10,39 +10,16 @@ public class Main {
     public static String regexOperatorDigit = "[-+ ]*([0-9]|[a-zA-Z])+";
     public static Pattern pattern = Pattern.compile(regexOperatorDigit);
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            NotationConverter nc = new NotationConverter(scanner.nextLine());
-            String[] postfixExpression = nc.convert().split(" ");
-            Deque<Long> calcStack = new ArrayDeque<>();
-
-            for (String element : postfixExpression) {
-                if (element.matches("-?[0-9]+"))
-                    calcStack.push(Long.parseLong(element));
-                else if (element.matches("-?[a-zA-Z]"))
-                    calcStack.push(getVariableNumValue(element));
-                else if (element.matches("[-+*/^]")) {
-                    long num1 = calcStack.pop();
-                    long num2 = calcStack.pop();
-                    calcStack.push(calculate(element, num1, num2));
-                }
-            }
-            System.out.println(calcStack.pop());
-        }
-
-    }
-
     private static long calculate(String operator, long num1, long num2) {
         switch (operator) {
             case "+":
                 return num1 + num2;
             case "-":
-                return num1 - num2;
+                return num2 - num1;
             case "*":
                 return num1 * num2;
             case "/":
-                return num1 / num2;
+                return num2 / num1;
             case "^":
                 return (long) Math.pow(num1, num2);
             default:
@@ -52,7 +29,7 @@ public class Main {
         }
     }
 
-    public static void temp () {
+    public static void main (String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         while(true){
@@ -79,28 +56,46 @@ public class Main {
                 continue;
             }
 
-//            /* VARIABLE PRINTING TODO: might be useless due to normal calculator logic getting the var automatically*/
-//            if (inputString.matches("[a-zA-Z]*") && variableMap.containsKey(inputString)){
-//                System.out.println("varprtint");
-//                System.out.println(variableMap.get(inputString));
-//                continue;
-//            }
 
-            /* CATCH ALL FOR INVALID INPUT */
-            if(!inputString.matches("[ +-]*(([0-9]+|[a-zA-Z]+)[ ]*[+-][ +-]*)*([0-9]+|[a-zA-Z]+)")){
-                System.out.println("Invalid expression: Catch All");
+            if (inputString.matches(".*[/*^][-+ ]*[/*^].*")) {
+                System.out.println("Expression invalid.");
                 continue;
             }
 
 
+            /* CATCH ALL FOR INVALID INPUT */
+//            if(!inputString.matches("[ +-]*(([0-9]+|[a-zA-Z]+)[ ]*[-+*/^][ +-]*)*([0-9]+|[a-zA-Z]+)")){
+//                System.out.println("Invalid expression: Catch All");
+//                continue;
+//            }
+
+            Long result = 0L;
+
+            inputString = condenseSigns(inputString);
+            NotationConverter nc = new NotationConverter(inputString);
+            String[] postfixExpression = nc.convert().split(" ");
+            Deque<Long> calcStack = new ArrayDeque<>();
+
+            for (String element : postfixExpression) {
+                if (element.matches("-?[0-9]+"))
+                    calcStack.push(Long.parseLong(element));
+                else if (element.matches("-?[a-zA-Z]+"))
+                    calcStack.push(getVariableNumValue(element));
+                else if (element.matches("[-+*/^]")) {
+                    long num1 = calcStack.pop();
+                    long num2 = calcStack.pop();
+                    calcStack.push(calculate(element, num1, num2));
+                }
+            }
+            result = calcStack.pop();
+
+/*          //--------------------- LEGACY CODE ----------------------------
             Matcher m = pattern.matcher(inputString);
             List<String> list = getElementsArrayList(m);
             if (list.contains("?")){
                 System.out.println("Invalid expression: ? found in list");
                 continue;
             }
-
-            //System.out.println("list of elements:" + list);
 
             if(list.get(0).matches("[+-]")){
                 list.add(0, "0");
@@ -143,6 +138,7 @@ public class Main {
                 }
 
             }
+*/
             //TODO: Hacky way to not print invalid variable
             if (result != Long.MIN_VALUE) {
                 System.out.println(result);
@@ -255,10 +251,15 @@ public class Main {
 
     private static String condenseSigns(String input) {
         //while current substring is bigger than the digits of the substring and 1 sign
-        while (input.length() > input.replaceAll("\\W", "").length() + 1) {
-            input = input.replaceAll("\\+-|-\\+", "-")
-                                    .replaceAll("\\++", "")
+        while (true) {
+            String newInput = input.replaceAll("\\+-|-\\+", "-")
+                                    .replaceAll("\\++", "+")
                                     .replaceAll("--", "+");
+            //System.out.println("input now: " + newInput);
+            if (newInput.equals(input)) {
+                break;
+            }
+            input = newInput;
         }
         //System.out.println("output is now " + input);
         return input;
